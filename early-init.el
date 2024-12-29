@@ -24,3 +24,10 @@
 
 ;; Initialize package cache
 (setq package-enable-at-startup t)
+
+;;; Native Compilation
+;; Make native compilation silent and prune its cache.
+;; Native compilation warnings probably have nothing to do with me.
+(when (native-comp-available-p)
+  (setq native-comp-async-report-warnings-errors 'silent)
+  (setq native-compile-prune-cache t))

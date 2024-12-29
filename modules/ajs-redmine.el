@@ -10,17 +10,23 @@
 (require 'elmine)
 
 ;;;; Variables and constants
-(defvar ajs/redmine-inbox
-  "~/org/redmine.org"
-  "Place to dump Redmine issues to be refiled.")
+(with-eval-after-load 'org
+  (defvar ajs/redmine-inbox
+    (concat org-directory "/inbox.org")
+    "Place to dump Redmine issues to be refiled.")
 
-(defvar ajs/redmine-org-files
-  '("~/org/hts.org")
-  "List of files to check for existing redmine issue entries")
+  (defvar ajs/redmine-org-files
+    `(,(concat org-directory "/work.org")
+      ,(concat org-directory "/work-archive.org"))
+    "List of files to check for existing redmine issue entries"))
 
 (defconst ajs/redmine-property-symbol
   (intern ":REDMINE")
   "Symbol for the redmine entry in the property drawer")
+
+(defvar ajs/secrets-file
+  (concat user-emacs-directory "lisp/secrets.el.gpg")
+  "Secret file to hold sensitive data.")
 
 ;;;; Parsing functions
 ;; Get AST from an org file. Used to check for existing redmine issues.
@@ -28,6 +34,7 @@
   "Parse the provided filepath using `org-element-parse-buffer' in a temporary buffer."
   (if (file-exists-p path)
       (with-temp-buffer
+	(org-mode)
 	(insert-file-contents path)
 	(org-element-parse-buffer))
     nil))
@@ -72,10 +79,10 @@ Return a list of issue numbers from those properties."
 	 (property-drawer (org-element-create 'property-drawer))
 	 (id-property (org-element-create
 		       'node-property
-		       `(:key "redmine" :value ,id)))
+		       `(:key "REDMINE" :value ,id)))
 	 (created-property (org-element-create
 			    'node-property
-			    `(:key "created" :value ,created)))
+			    `(:key "CREATED" :value ,created)))
 	 (paragraph (org-element-create 'paragraph))
 	 (description (plist-get issue :description))
 	 (description (replace-regexp-in-string "\r" "" description))
@@ -104,10 +111,12 @@ Return a list of issue numbers from those properties."
 ;;;; Functionality
 (defun ajs/get-redmine-issues ()
   "Get all issues assigned to me. No limit."
-  (load-library "~/new-emacs-config/lisp/secrets.el.gpg")
-  (elmine/get-issues :assigned_to_id "me" :limit nil))
+  (load-library ajs/secrets-file)
+  (if (bound-and-true-p elmine/api-key)
+      (elmine/get-issues :assigned_to_id "me" :limit 1000)
+    (message "API key not loaded.")))
 
-(defun ajs/redmine ()
+(defun check-redmine ()
   "1. Parse org files for existing redmine IDs
 2. Make a request to redmine for all issues assigned to me
 3. Find redmine issues with IDs not in my org files
@@ -124,7 +133,7 @@ Return a list of issue numbers from those properties."
     (if headlines
 	(progn
 	  (ajs/insert-org-element-headlines headlines ajs/redmine-inbox)
-	  "Inserted into redmine inbox.")
-      "No new issues.")))
+	  (message "Inserted into redmine inbox."))
+      (message "No new issues."))))
 
 (provide 'ajs-redmine)

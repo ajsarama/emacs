@@ -1,10 +1,3 @@
-;;; Native Compilation
-;; Make native compilation silent and prune its cache.
-;; Native compilation warnings probably have nothing to do with me.
-(when (native-comp-available-p)
-  (setq native-comp-async-report-warnings-errors 'silent)
-  (setq native-compile-prune-cache t))
-
 ;;; Garbage Collection
 ; Garbage collection threshold, note default is 800,000.
 (defvar ajs/gc-cons-threshold (* 1000 1000 8))
@@ -19,6 +12,9 @@
 
 (add-hook 'minibuffer-setup-hook #'ajs/disable-gc)
 (add-hook 'minibuffer-exit-hook #'ajs/enable-gc)
+
+;;; Bookmarks
+(setq bookmark-fringe-mark nil)
 
 ;;; Backups and Lockfiles
 (setq make-backup-files nil)
@@ -99,4 +95,5 @@ DEFINITIONS is a sequence of string and command pairs."
 (require 'ajs-org)
 (require 'ajs-modeline)
 (require 'ajs-edit)
-(require 'elmine)
+(require 'ajs-redmine)
+(require 'ajs-minibuffer)

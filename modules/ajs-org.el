@@ -16,7 +16,29 @@
 	org-tags-column 0
 	org-directory "~/org"
 	org-default-notes-file "~/org/inbox.org"
-	))
+	org-enforce-todo-dependencies t
+	org-log-into-drawer "LOGBOOK"
+	org-agenda-files '("~/org/work.org")
+	org-refile-use-outline-path t
+	org-log-done 'time
+	org-archive-subtree-save-file-p t
+	org-archive-save-context-info '(file))
+  (setq org-refile-targets
+      '((org-agenda-files :maxlevel . 2)))
+  (setq org-todo-keywords
+	'((sequence "REOPEN(o@)" "TODO(t!)" "RESEARCH(r)" "WAIT(w@)" "CODEREVIEW(c!)"
+		    "|" "DONE(d)" "CANCELED(x@)")
+	  (sequence "BUG(b!)" "NOREPRODUCE(p)" "|" "FIXED(f)" "CLOSED(l)")))
+  (setq org-capture-templates
+	'(("d" "Development" entry (file "~/org/inbox.org")
+	   "* Development %U\n%?" :empty-lines 1)
+	  ("m" "Meeting" entry (file "~/org/inbox.org")
+	   "* %^{Meeting:|Hydro|Hydro|Weekly|All-Hands} Meeting %^T\n%?" :empty-lines 1)
+	  ))
+  )
 
+(ajs/emacs-keybind global-map
+  "C-c c" #'org-capture
+  "C-c i" (lambda () (interactive) (find-file "~/org/inbox.org")))
 
 (provide 'ajs-org)

@@ -25,6 +25,9 @@
 ;; Initialize package cache
 (setq package-enable-at-startup t)
 
+;; First buffer choice
+(setq initial-buffer-choice "~/org/inbox.org")
+
 ;;; Native Compilation
 ;; Make native compilation silent and prune its cache.
 ;; Native compilation warnings probably have nothing to do with me.

@@ -19,12 +19,12 @@
 	org-enforce-todo-dependencies t
 	org-log-into-drawer "LOGBOOK"
 	org-agenda-files '("~/org/work.org")
-	org-refile-use-outline-path t
+	org-refile-use-outline-path nil
 	org-log-done 'time
 	org-archive-subtree-save-file-p t
 	org-archive-save-context-info '(file))
   (setq org-refile-targets
-      '((org-agenda-files :maxlevel . 2)))
+      '((org-agenda-files :maxlevel . 10)))
   (setq org-todo-keywords
 	'((sequence "REOPEN(o@)" "TODO(t!)" "RESEARCH(r)" "WAIT(w@)" "CODEREVIEW(c!)"
 		    "|" "DONE(d)" "CANCELED(x@)")

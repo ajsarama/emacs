@@ -1,0 +1,12 @@
+lisp/sumo/
+elpaca/
+eln-cache/
+auto-save-list/
+elpa/
+eshell/
+fontaine-latest-state.eld
+history
+tramp
+recentf
+transient/
+url/

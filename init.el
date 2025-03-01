@@ -57,11 +57,21 @@ If CHAR is not found, print a message and leave point unchanged."
       (progn
         (goto-char message "Character '%c' not found on this line." char)))))
 
+(defun ajs/increment-integer-at-point ()
+  (interactive)
+  (let* ((original (char-after))
+	 (character (- original 48)))
+    (when (and (>= character 0) (<= character 8))
+      (delete-backward-char -1)
+      (insert-char (1+ original))
+      (backward-char))))
+
 (ajs/emacs-keybind global-map
   "M-o" #'other-window
   "M-l" #'display-line-numbers-mode
   "M-f" #'ajs/find-char
   "M-b" #'ajs/find-char-backward
+  "C-z" #'ajs/increment-integer-at-point
   "C-c c" #'compile)
 
 (global-visual-line-mode 1)
@@ -113,6 +123,17 @@ If CHAR is not found, print a message and leave point unchanged."
   ;; Enable use-package :ensure support for Elpaca.
   (elpaca-use-package-mode))
 
+
+;;; Custom Lisp
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+(if (file-exists-p (expand-file-name "lisp/sumo" user-emacs-directory))
+    (progn (add-to-list 'load-path (expand-file-name "lisp/sumo" user-emacs-directory))
+	   (require 'sumo))
+  (use-package sumo
+    :ensure (:host github :repo "ajsarama/sumo" :inherit nil)))
+
+(load-theme 'sumo-dark t)
+
 ;;; Faces
 (use-package fontaine
   :ensure t
@@ -122,30 +143,17 @@ If CHAR is not found, print a message and leave point unchanged."
 	;; Presets for fonts that can be enabled
 	;; Probably looking at a programming, prose, screen sharing, and multi-window
       '((regular
-         :default-family "Aporetic Sans Mono"
-         :default-height 160
-         :fixed-pitch-family "Aporetic Sans Mono"
+         :default-family "Iosevka"
+         :default-height 140
+         :fixed-pitch-family "Iosevka"
          :variable-pitch-family "Aporetic Sans"
-         :line-spacing 1)
+         :line-spacing 0)
         (large
          :default-height 230
          :line-spacing 1)))
   ; Tries to restore the last font preset that was used
   (fontaine-mode 1)
   (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular)))
-
-;;; Theme
-(use-package modus-themes
-  :ensure t
-  :demand t
-  :config
-  (setq modus-themes-mixed-fonts t
-	modus-themes-variable-pitch-ui nil
-	modus-themes-headings
-	'((1 . (variable-pitch 1.5))
-          (2 . (variable-pitch 1.3))
-          (t . (vatiable-pitch 1.1))))
-  (modus-themes-load-theme 'modus-operandi-tinted))
 
 ;;; Spacious padding
 (use-package spacious-padding
@@ -234,27 +242,7 @@ If CHAR is not found, print a message and leave point unchanged."
   (ajs/emacs-keybind dired-mode-map
     "M-+" #'dired-create-empty-file))
 
-;;; Breadcrumb
-(use-package breadcrumb
-  :ensure t
-  :config
-  (breadcrumb-mode))
-
-;;; Org configuration
-(use-package org
-  :ensure nil
-  :config
-  (add-hook 'org-mode-hook
-	    (lambda ()
-	      (progn
-		(variable-pitch-mode t)
-		(setq-local cursor-type 'bar)
-		(org-indent-mode t)
-		(olivetti-mode t))))
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((lisp . t)))
-  (setq org-babel-lisp-eval-fn 'sly-eval))
+(require 'ajs-org)
 
 ;;; Formatting
 (use-package reformatter
@@ -287,3 +275,17 @@ If CHAR is not found, print a message and leave point unchanged."
   :config
   (ajs/emacs-keybind global-map
     "M-j" #'avy-goto-char-timer))
+
+;;; Colors
+(use-package rainbow-mode
+  :ensure t)
+
+;;; Transient
+(use-package transient
+  :ensure t)
+
+;;; Magit
+(use-package magit
+  :after (transient)
+  :ensure t)
+

@@ -250,7 +250,7 @@ If CHAR is not found, print a message and leave point unchanged."
   :config
   (reformatter-define clang-format
 		      :program "clang-format"
-		      :args '()
+		      :args '("-style={IndentWidth: 4, TabWidth: 4}")
 		      :lighter " clang-format"))
 
 

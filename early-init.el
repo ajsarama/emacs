@@ -28,3 +28,5 @@
 ;; Disable native comp warnings
 (when (native-comp-available-p)
   (setq native-comp-async-report-warnings-errors nil))
+
+

@@ -80,7 +80,7 @@ If CHAR is not found, print a message and leave point unchanged."
 (recentf-mode 1)
 
 ;; Elpaca installer
-(defvar elpaca-installer-version 0.10)
+(defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -126,13 +126,34 @@ If CHAR is not found, print a message and leave point unchanged."
 
 ;;; Custom Lisp
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-(if (file-exists-p (expand-file-name "lisp/sumo" user-emacs-directory))
-    (progn (add-to-list 'load-path (expand-file-name "lisp/sumo" user-emacs-directory))
-	   (require 'sumo))
-  (use-package sumo
-    :ensure (:host github :repo "ajsarama/sumo" :inherit nil)))
 
-(load-theme 'sumo-dark t)
+(use-package doom-themes
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold nil    ; if nil, bold is universally disabled
+        doom-themes-enable-italic nil) ; if nil, italics is universally disabled
+  (load-theme 'doom-pine t)
+  (custom-set-faces
+   `(cursor ((t (:background ,(doom-color 'magenta)))))
+   `(link ((t :foreground ,(doom-color 'dark-green))))
+   `(org-link ((t :foreground nil)))
+   `(mode-line ((t (:foreground ,(doom-color 'fg)))))
+   `(mode-line-inactive ((t (:foreground ,(doom-color 'fg-alt)))))
+   `(font-lock-variable-name-face ((t (:foreground ,(doom-color 'dark-green)))))
+   `(font-lock-function-name-face ((t (:foreground ,(doom-color 'yellow)))))
+   `(org-warning ((t (:foreground ,(doom-color 'red)))))
+   `(org-todo ((t (:foreground ,(doom-color 'red)))))
+   `(org-level-1 ((t :foreground ,(doom-color 'fg))))
+   `(org-level-2 ((t :foreground ,(doom-color 'blue))))
+   `(org-level-3 ((t :foreground ,(doom-color 'dark-blue))))
+   `(org-level-4 ((t :foreground ,(doom-color 'green))))
+   `(org-level-5 ((t :foreground ,(doom-color 'dark-green)))))
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
 ;;; Faces
 (use-package fontaine
@@ -143,10 +164,10 @@ If CHAR is not found, print a message and leave point unchanged."
 	;; Presets for fonts that can be enabled
 	;; Probably looking at a programming, prose, screen sharing, and multi-window
       '((regular
-         :default-family "Iosevka"
+         :default-family "Iosevka Custom"
          :default-height 140
-         :fixed-pitch-family "Iosevka"
-         :variable-pitch-family "Aporetic Sans"
+         :fixed-pitch-family "Iosevka Custom"
+         :variable-pitch-family "Iosevka Custom"
          :line-spacing 0)
         (large
          :default-height 230
@@ -196,6 +217,111 @@ If CHAR is not found, print a message and leave point unchanged."
   :config
   (vertico-mode))
 
+;; Example configuration for Consult
+(use-package consult
+  :ensure t
+  :demand t
+  ;; Replace bindings. Lazily loaded by `use-package'.
+  :bind (;; C-c bindings in `mode-specific-map'
+         ("C-c M-x" . consult-mode-command)
+         ("C-c h" . consult-history)
+         ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+         ([remap Info-search] . consult-info)
+         ;; C-x bindings in `ctl-x-map'
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings in `goto-map'
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings in `search-map'
+         ("M-s d" . consult-find)                  ;; Alternative: consult-fd
+         ("M-s c" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+
+  ;; Enable automatic preview at point in the *Completions* buffer. This is
+  ;; relevant when you use the default completion UI.
+  :hook (completion-list-mode . consult-preview-at-point-mode)
+
+  ;; The :init configuration is always executed (Not lazy)
+  :init
+
+  ;; Tweak the register preview for `consult-register-load',
+  ;; `consult-register-store' and the built-in commands.  This improves the
+  ;; register formatting, adds thin separator lines, register sorting and hides
+  ;; the window mode line.
+  (advice-add #'register-preview :override #'consult-register-window)
+  (setq register-preview-delay 0.5)
+
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+
+  ;; Configure other variables and modes in the :config section,
+  ;; after lazily loading the package.
+  :config
+
+  ;; Optionally configure preview. The default value
+  ;; is 'any, such that any key triggers the preview.
+  ;; (setq consult-preview-key 'any)
+  ;; (setq consult-preview-key "M-.")
+  ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+  ;; For some commands and buffer sources it is useful to configure the
+  ;; :preview-key on a per-command basis using the `consult-customize' macro.
+  (consult-customize
+   consult-theme :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep consult-man
+   consult-bookmark consult-recent-file consult-xref
+   consult--source-bookmark consult--source-file-register
+   consult--source-recent-file consult--source-project-recent-file
+   ;; :preview-key "M-."
+   :preview-key '(:debounce 0.4 any))
+
+  ;; Optionally configure the narrowing key.
+  ;; Both < and C-+ work reasonably well.
+  (setq consult-narrow-key "<") ;; "C-+"
+
+  ;; Optionally make narrowing help available in the minibuffer.
+  ;; You may want to use `embark-prefix-help-command' or which-key instead.
+  ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
+)
+
 (use-package savehist
   :ensure nil
   :config
@@ -243,6 +369,7 @@ If CHAR is not found, print a message and leave point unchanged."
     "M-+" #'dired-create-empty-file))
 
 (require 'ajs-org)
+(require 'ajs-meow)
 
 ;;; Formatting
 (use-package reformatter
@@ -289,3 +416,17 @@ If CHAR is not found, print a message and leave point unchanged."
   :after (transient)
   :ensure t)
 
+(use-package flymake
+  :ensure t)
+
+(use-package eglot
+  :after (flymake)
+  :ensure t)
+
+(use-package haskell-mode
+  :ensure t)
+
+(use-package info
+  :ensure nil
+  :config
+  (add-to-list 'Info-directory-list "/opt/homebrew/Cellar/emacs-plus@31/31.0.50/share/info/emacs"))

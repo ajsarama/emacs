@@ -1,8 +1,10 @@
+;;; -*- lexical-binding: t; -*-
 ;;; Org configuration
 (use-package org
   :ensure nil
-  :after sly
+  :after (sly, haskell-mode)
   :config
+  (require 'ob-haskell)
   (add-hook 'org-mode-hook
 	    (lambda ()
 	      (progn
@@ -12,7 +14,8 @@
 		(setq-local line-spacing 0.1))))
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((lisp . t)))
+   '((lisp . t)
+     (hasksell . t)))
   (setq org-babel-lisp-eval-fn 'sly-eval))
 
 ;; Save the corresponding buffers
@@ -56,8 +59,6 @@ See also `org-save-all-org-buffers'"
 (setq org-refile-targets
       `((,org-agenda-files . (:maxlevel . 1))))
 
-(setq org-enforce-todo-dependencies t)
-
 ;; These came from the org-modern configuration
 (setq
    ;; Edit settings
@@ -70,5 +71,12 @@ See also `org-save-all-org-buffers'"
    ;; Org styling, hide markup etc.
    org-hide-emphasis-markers t
    org-agenda-tags-column 0)
+
+(setq org-todo-keywords
+      '((sequence "TODO(t)" "BLOCKED(b)" "|" "DONE(d)" "CANCELED(c)")))
+
+(setq org-todo-keyword-faces
+      '(("TODO" . org-todo) ("BLOCKED" . org-todo)
+	("DONE" . org-done) ("CANCELED" . org-done)))
 
 (provide 'ajs-org)

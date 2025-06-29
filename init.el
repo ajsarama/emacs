@@ -72,7 +72,9 @@ If CHAR is not found, print a message and leave point unchanged."
   "M-f" #'ajs/find-char
   "M-b" #'ajs/find-char-backward
   "C-z" #'ajs/increment-integer-at-point
-  "C-c c" #'compile)
+  "C-c c" #'compile
+  "C-c g" #'magit-dispatch
+  "C-c f" #'magit-file-dispatch)
 
 (global-visual-line-mode 1)
 (which-key-mode 1)
@@ -127,33 +129,10 @@ If CHAR is not found, print a message and leave point unchanged."
 ;;; Custom Lisp
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-(use-package doom-themes
+(use-package modus-themes
   :ensure t
   :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold nil    ; if nil, bold is universally disabled
-        doom-themes-enable-italic nil) ; if nil, italics is universally disabled
-  (load-theme 'doom-pine t)
-  (custom-set-faces
-   `(cursor ((t (:background ,(doom-color 'magenta)))))
-   `(link ((t :foreground ,(doom-color 'dark-green))))
-   `(org-link ((t :foreground nil)))
-   `(mode-line ((t (:foreground ,(doom-color 'fg)))))
-   `(mode-line-inactive ((t (:foreground ,(doom-color 'fg-alt)))))
-   `(font-lock-variable-name-face ((t (:foreground ,(doom-color 'dark-green)))))
-   `(font-lock-function-name-face ((t (:foreground ,(doom-color 'yellow)))))
-   `(org-warning ((t (:foreground ,(doom-color 'red)))))
-   `(org-todo ((t (:foreground ,(doom-color 'red)))))
-   `(org-level-1 ((t :foreground ,(doom-color 'fg))))
-   `(org-level-2 ((t :foreground ,(doom-color 'blue))))
-   `(org-level-3 ((t :foreground ,(doom-color 'dark-blue))))
-   `(org-level-4 ((t :foreground ,(doom-color 'green))))
-   `(org-level-5 ((t :foreground ,(doom-color 'dark-green)))))
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+  (modus-themes-select 'modus-operandi))
 
 ;;; Faces
 (use-package fontaine
@@ -416,12 +395,17 @@ If CHAR is not found, print a message and leave point unchanged."
   :after (transient)
   :ensure t)
 
-(use-package flymake
-  :ensure t)
+(use-package lsp-mode
+  :ensure t
+  :hook ((clojure-mode clojurescript-mode clojurec-mode) . lsp)
+  :commands lsp
+  :config
+  (setq lsp-enable-indentation nil   ;; you might prefer clojure-mode's indentation
+        lsp-enable-on-type-formatting nil))
 
-(use-package eglot
-  :after (flymake)
-  :ensure t)
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode)
 
 (use-package haskell-mode
   :ensure t)
@@ -430,3 +414,17 @@ If CHAR is not found, print a message and leave point unchanged."
   :ensure nil
   :config
   (add-to-list 'Info-directory-list "/opt/homebrew/Cellar/emacs-plus@31/31.0.50/share/info/emacs"))
+
+(use-package clojure-mode
+  :ensure t
+  :demand t)
+
+(use-package consult-lsp
+  :ensure t
+  :demand t)
+
+(use-package flycheck
+  :ensure t)
+
+(use-package consult-flycheck
+  :ensure t)

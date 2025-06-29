@@ -1,22 +1,11 @@
 ;;; -*- lexical-binding: t; -*-
-;;; Org configuration
-(use-package org
-  :ensure nil
-  :after (sly, haskell-mode)
-  :config
-  (require 'ob-haskell)
-  (add-hook 'org-mode-hook
-	    (lambda ()
-	      (progn
-		(variable-pitch-mode t)
-		(setq-local cursor-type 'bar)
-		(org-indent-mode t)
-		(setq-local line-spacing 0.1))))
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((lisp . t)
-     (hasksell . t)))
-  (setq org-babel-lisp-eval-fn 'sly-eval))
+(defun ajs/save-captured-buffers ()
+  (let ((filename (cdr
+		   (assq
+		  'filename
+		  (bookmark-get-bookmark "org-capture-last-stored")))))
+    (with-current-buffer (get-file-buffer filename)
+      (save-buffer))))
 
 ;; Save the corresponding buffers
 (defun ajs/save-org-buffers ()
@@ -30,6 +19,7 @@ See also `org-save-all-org-buffers'"
   (message "Saving org-agenda-files buffers... done"))
 
 ;; Add it after refile
+;; Isn't there a bookmark for the last refile/capture?
 (advice-add 'org-refile :after
 	    (lambda (&rest _)
 	      (ajs/save-org-buffers)))
@@ -39,12 +29,12 @@ See also `org-save-all-org-buffers'"
 	      (ajs/save-org-buffers)))
 
 
-(setq org-directory "~/org-framework")
+(setq org-directory "~/org")
 
 ;; Inbox is not included here, because entries should always be given status
 ;; after being refiled
 (setq org-agenda-files
-      '("asdt.org" "aj.org"))
+      '("tasks.org"))
 
 (setq org-default-notes-file
       (concat org-directory "/inbox.org"))
@@ -73,10 +63,14 @@ See also `org-save-all-org-buffers'"
    org-agenda-tags-column 0)
 
 (setq org-todo-keywords
-      '((sequence "TODO(t)" "BLOCKED(b)" "|" "DONE(d)" "CANCELED(c)")))
+      '((sequence "TODO(t)" "BLOCKED(b)" "|" "DONE(d!)" "CANCELED(c)")))
 
 (setq org-todo-keyword-faces
       '(("TODO" . org-todo) ("BLOCKED" . org-todo)
 	("DONE" . org-done) ("CANCELED" . org-done)))
+
+(setq org-startup-indented t
+      org-agenda-todo-ignore-with-date t
+      org-log-into-drawer t)
 
 (provide 'ajs-org)

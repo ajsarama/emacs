@@ -143,10 +143,10 @@ If CHAR is not found, print a message and leave point unchanged."
 	;; Presets for fonts that can be enabled
 	;; Probably looking at a programming, prose, screen sharing, and multi-window
       '((regular
-         :default-family "Iosevka Custom"
+         :default-family "Iosevka"
          :default-height 140
-         :fixed-pitch-family "Iosevka Custom"
-         :variable-pitch-family "Iosevka Custom"
+         :fixed-pitch-family "Iosevka"
+         :variable-pitch-family "Iosevka Aile"
          :line-spacing 0)
         (large
          :default-height 230
@@ -176,19 +176,6 @@ If CHAR is not found, print a message and leave point unchanged."
   ;; Takes precedence over CC mode (yuck!)
   (add-to-list 'auto-mode-alist '("\\.c\\'" . simpc-mode))
   (add-to-list 'auto-mode-alist '("\\.h\\'" . simpc-mode)))
-
-;;; Elmine fork
-(use-package elmine
-  :ensure (:host github :repo "ajsarama/elmine" :inherit nil))
-
-;;; Auto-matching
-(use-package smartparens
-  :ensure smartparens  ; install the package
-  :hook (prog-mode markdown-mode comint-mode) ; add `smartparens-mode` to these hooks
-  :config
-  ; load default config
-  (require 'smartparens-config)
-  (setq sp-highlight-pair-overlay nil))
 
 ;;; Minibuffer packages
 (use-package vertico
@@ -347,34 +334,6 @@ If CHAR is not found, print a message and leave point unchanged."
   (ajs/emacs-keybind dired-mode-map
     "M-+" #'dired-create-empty-file))
 
-(require 'ajs-org)
-(require 'ajs-meow)
-
-;;; Formatting
-(use-package reformatter
-  :ensure t
-  :config
-  (reformatter-define clang-format
-		      :program "clang-format"
-		      :args '("-style={IndentWidth: 4, TabWidth: 4}")
-		      :lighter " clang-format"))
-
-
-;;; Atuin for Eshell
-(use-package eshell-atuin
-  :ensure t
-  :after eshell
-  :config
-  (eshell-atuin-mode)
-  (ajs/emacs-keybind eshell-mode-map
-    "M-<up>" #'eshell-atuin-history))
-
-;;; Common Lisp
-(use-package sly
-  :ensure t
-  :config
-  (setq inferior-lisp-program "sbcl"))
-
 ;;; Jumping
 (use-package avy
   :ensure t
@@ -395,36 +354,3 @@ If CHAR is not found, print a message and leave point unchanged."
   :after (transient)
   :ensure t)
 
-(use-package lsp-mode
-  :ensure t
-  :hook ((clojure-mode clojurescript-mode clojurec-mode) . lsp)
-  :commands lsp
-  :config
-  (setq lsp-enable-indentation nil   ;; you might prefer clojure-mode's indentation
-        lsp-enable-on-type-formatting nil))
-
-(use-package lsp-ui
-  :ensure t
-  :commands lsp-ui-mode)
-
-(use-package haskell-mode
-  :ensure t)
-
-(use-package info
-  :ensure nil
-  :config
-  (add-to-list 'Info-directory-list "/opt/homebrew/Cellar/emacs-plus@31/31.0.50/share/info/emacs"))
-
-(use-package clojure-mode
-  :ensure t
-  :demand t)
-
-(use-package consult-lsp
-  :ensure t
-  :demand t)
-
-(use-package flycheck
-  :ensure t)
-
-(use-package consult-flycheck
-  :ensure t)

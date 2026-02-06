@@ -32,50 +32,6 @@ DEFINITIONS is a sequence of string and command pairs."
                 `(define-key map (kbd ,key) ,command))))
           (cl-mapcar #'cons keys commands)))))
 
-(defun ajs/find-char (char)
-  "Move point to the next occurrence of CHAR in the current line.
-If CHAR is not found, print a message and leave point unchanged."
-  (interactive "cFind character: ")
-  (let ((start (point))
-        (line-end (line-end-position))
-	(case-fold-search nil))
-    (forward-char)
-    (if (search-forward (char-to-string char) line-end t)
-        (backward-char)
-      (progn
-        (goto-char start)
-        (message "Character '%c' not found on this line." char)))))
-
-(defun ajs/find-char-backward (char)
-  "Move point to the next occurrence of CHAR in the current line.
-If CHAR is not found, print a message and leave point unchanged."
-  (interactive "cFind character: ")
-  (let ((start (point))
-        (line-start (line-beginning-position))
-	(case-fold-search nil))
-    (unless (search-backward (char-to-string char) line-start t)
-      (progn
-        (goto-char message "Character '%c' not found on this line." char)))))
-
-(defun ajs/increment-integer-at-point ()
-  (interactive)
-  (let* ((original (char-after))
-	 (character (- original 48)))
-    (when (and (>= character 0) (<= character 8))
-      (delete-backward-char -1)
-      (insert-char (1+ original))
-      (backward-char))))
-
-(ajs/emacs-keybind global-map
-  "M-o" #'other-window
-  "M-l" #'display-line-numbers-mode
-  "M-f" #'ajs/find-char
-  "M-b" #'ajs/find-char-backward
-  "C-z" #'ajs/increment-integer-at-point
-  "C-c c" #'compile
-  "C-c g" #'magit-dispatch
-  "C-c f" #'magit-file-dispatch)
-
 (global-visual-line-mode 1)
 (which-key-mode 1)
 (blink-cursor-mode -1)
@@ -125,14 +81,9 @@ If CHAR is not found, print a message and leave point unchanged."
   ;; Enable use-package :ensure support for Elpaca.
   (elpaca-use-package-mode))
 
-
 ;;; Custom Lisp
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-
-(use-package modus-themes
-  :ensure t
-  :config
-  (modus-themes-select 'modus-operandi))
+(require 'ajs-org)
 
 ;;; Faces
 (use-package fontaine
@@ -143,10 +94,10 @@ If CHAR is not found, print a message and leave point unchanged."
 	;; Presets for fonts that can be enabled
 	;; Probably looking at a programming, prose, screen sharing, and multi-window
       '((regular
-         :default-family "Iosevka"
-         :default-height 140
-         :fixed-pitch-family "Iosevka"
-         :variable-pitch-family "Iosevka Aile"
+         :default-family "BerkeleyMono Nerd Font Mono"
+         :default-height 130
+         :fixed-pitch-family "BerkeleyMono Nerd Font Mono"
+         :variable-pitch-family "BerkeleyMono Nerd Font Mono"
          :line-spacing 0)
         (large
          :default-height 230
@@ -154,28 +105,6 @@ If CHAR is not found, print a message and leave point unchanged."
   ; Tries to restore the last font preset that was used
   (fontaine-mode 1)
   (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular)))
-
-;;; Spacious padding
-(use-package spacious-padding
-  :ensure t
-  :config
-  (spacious-padding-mode 1))
-
-;;; Olivetti
-(use-package olivetti
-  :ensure t
-  :config
-  (setq-default olivetti-body-width 0.7
-		olivetti-style nil)
-  (custom-set-faces '(olivetti-fringe ((nil :inherit nil :foreground nil :background nil)))))
-
-;;; Simple C Mode
-(use-package simpc-mode
-  :ensure (:host github :repo "rexim/simpc-mode" :inherit nil)
-  :config
-  ;; Takes precedence over CC mode (yuck!)
-  (add-to-list 'auto-mode-alist '("\\.c\\'" . simpc-mode))
-  (add-to-list 'auto-mode-alist '("\\.h\\'" . simpc-mode)))
 
 ;;; Minibuffer packages
 (use-package vertico
@@ -211,7 +140,7 @@ If CHAR is not found, print a message and leave point unchanged."
          ("M-y" . consult-yank-pop)                ;; orig. yank-pop
          ;; M-g bindings in `goto-map'
          ("M-g e" . consult-compile-error)
-         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g f" . consult-flycheck)               ;; Alternative: consult-flycheck
          ("M-g g" . consult-goto-line)             ;; orig. goto-line
          ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
          ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
@@ -269,15 +198,7 @@ If CHAR is not found, print a message and leave point unchanged."
   ;; (setq consult-preview-key "M-.")
   ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
   ;; For some commands and buffer sources it is useful to configure the
-  ;; :preview-key on a per-command basis using the `consult-customize' macro.
-  (consult-customize
-   consult-theme :preview-key '(:debounce 0.2 any)
-   consult-ripgrep consult-git-grep consult-grep consult-man
-   consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-file-register
-   consult--source-recent-file consult--source-project-recent-file
-   ;; :preview-key "M-."
-   :preview-key '(:debounce 0.4 any))
+  ;; :preview-key on a per-command basis using the `consult-customize' macro
 
   ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
@@ -286,6 +207,7 @@ If CHAR is not found, print a message and leave point unchanged."
   ;; Optionally make narrowing help available in the minibuffer.
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
   ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
+  (setq completion-in-region-function #'consult-completion-in-region)
 )
 
 (use-package savehist
@@ -312,15 +234,6 @@ If CHAR is not found, print a message and leave point unchanged."
   :mode ("README\\.md\\'" . gfm-mode)
   :init (setq markdown-command "multimarkdown"))
 
-;;; Eat terminal emulator and Eshell
-(use-package eat
-  :ensure t
-  :config
-  ;; For `eat-eshell-mode'.
-  (add-hook 'eshell-load-hook #'eat-eshell-mode)
-  ;; For `eat-eshell-visual-command-mode'.
-  (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode))
-
 ;;; Dired configuration
 (use-package dired
   :ensure nil
@@ -341,10 +254,6 @@ If CHAR is not found, print a message and leave point unchanged."
   (ajs/emacs-keybind global-map
     "M-j" #'avy-goto-char-timer))
 
-;;; Colors
-(use-package rainbow-mode
-  :ensure t)
-
 ;;; Transient
 (use-package transient
   :ensure t)
@@ -354,3 +263,125 @@ If CHAR is not found, print a message and leave point unchanged."
   :after (transient)
   :ensure t)
 
+(use-package rainbow-delimiters
+  :ensure t
+  :hook
+  (tuareg-mode . rainbow-delimiters-mode))
+
+;; Major mode for OCaml programming
+(use-package tuareg
+  :ensure t
+  :mode (("\\.ocamlinit\\'" . tuareg-mode)))
+
+;; Major mode for editing Dune project files
+(use-package dune
+  :ensure t)
+
+(use-package flycheck
+  :ensure t)
+
+(use-package consult-flycheck
+  :ensure t
+  :after (consult flycheck))
+
+(use-package project
+  :ensure t)
+
+(use-package jsonrpc
+  :ensure t)
+
+(use-package flymake
+  :ensure t
+  :config
+  (setq flymake-diagnostic-format-alist
+        '((t . (origin code message)))))
+
+(use-package eglot
+  :ensure t)
+
+(use-package flycheck-eglot
+  :ensure t
+  :after (flycheck eglot))
+
+(use-package ocaml-eglot
+  :ensure t
+  :after tuareg
+  :hook
+  (tuareg-mode . ocaml-eglot)
+  (ocaml-eglot . eglot-ensure)
+  (ocaml-eglot . (lambda () 
+                   (add-hook #'before-save-hook #'eglot-format nil t)))
+  (eglot-managed-mode . (lambda () (flycheck-eglot-mode 1)))
+  :config
+  (setq ocaml-eglot-syntax-checker 'flycheck))
+
+(use-package opam-switch-mode
+  :ensure t
+  :hook
+  (tuareg-mode . opam-switch-mode))
+
+(use-package ocp-indent
+  :ensure t
+  :config
+  (add-hook 'ocaml-eglot-hook 'ocp-setup-indent))
+
+(when nil
+(use-package doom-themes
+  :ensure t
+  :custom
+  (doom-themes-enable-italic nil)
+  (doom-themes-enable-bold nil)
+  :config
+  (load-theme 'doom-earl-grey t)
+  (set-face-italic-p 'italic nil)))
+
+(use-package modus-themes
+  :ensure t
+  :demand t
+  :init
+  ;; Starting with version 5.0.0 of the `modus-themes', other packages
+  ;; can be built on top to provide their own "Modus" derivatives.
+  ;; For example, this is what I do with my `ef-themes' and
+  ;; `standard-themes' (starting with versions 2.0.0 and 3.0.0,
+  ;; respectively).
+  ;;
+  ;; The `modus-themes-include-derivatives-mode' makes all Modus
+  ;; commands that act on a theme consider all such derivatives, if
+  ;; their respective packages are available and have been loaded.
+  ;;
+  ;; Note that those packages can even completely take over from the
+  ;; Modus themes such that, for example, `modus-themes-rotate' only
+  ;; goes through the Ef themes (to this end, the Ef themes provide
+  ;; the `ef-themes-take-over-modus-themes-mode' and the Standard
+  ;; themes have the `standard-themes-take-over-modus-themes-mode'
+  ;; equivalent).
+  ;;
+  ;; If you only care about the Modus themes, then (i) you do not need
+  ;; to enable the `modus-themes-include-derivatives-mode' and (ii) do
+  ;; not install and activate those other theme packages.
+  (modus-themes-include-derivatives-mode 1)
+  :bind
+  (("<f5>" . modus-themes-rotate)
+   ("C-<f5>" . modus-themes-select)
+   ("M-<f5>" . modus-themes-load-random))
+  :config
+  ;; Your customizations here:
+  (setq modus-themes-to-toggle '(modus-operandi modus-vivendi)
+        modus-themes-to-rotate modus-themes-items
+        modus-themes-mixed-fonts nil
+        modus-themes-variable-pitch-ui nil
+        modus-themes-italic-constructs nil
+        modus-themes-bold-constructs nil
+        modus-themes-completions '((t . (bold)))
+        modus-themes-prompts '(bold)
+        modus-themes-headings
+        '((agenda-structure . (variable-pitch light 2.2))
+          (agenda-date . (variable-pitch regular 1.3))
+          (t . (regular 1.15))))
+
+  (setq modus-themes-common-palette-overrides nil)
+
+  ;; Finally, load your theme of choice (or a random one with
+  ;; `modus-themes-load-random', `modus-themes-load-random-dark',
+  ;; `modus-themes-load-random-light').
+  (modus-themes-load-theme 'modus-operandi))
